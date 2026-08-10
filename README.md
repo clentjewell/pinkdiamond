@@ -12,11 +12,11 @@ Worker with static assets.
 
 ## Stack
 
-- [Astro 5](https://astro.build) — static output, no client framework
-- Minimal JS: mobile nav toggle and the enquiry form submission only
-- Cloudflare Worker (`worker/index.ts`) serves the static build via the
-  assets binding and handles `POST /api/enquiry`, emailing enquiries via
+- [Astro 5](https://astro.build) with the `@astrojs/cloudflare` adapter —
+  every page is prerendered static; only `POST /api/enquiry`
+  (`src/pages/api/enquiry.ts`) runs in the Worker, emailing enquiries via
   Resend
+- Minimal JS: mobile nav toggle and the enquiry form submission only
 - `@astrojs/sitemap` for `sitemap-index.xml`; `robots.txt` and `llms.txt` in
   `/public`
 
@@ -40,10 +40,11 @@ deploying to a Worker named `pinkdiamond` (see `wrangler.jsonc`).
 2. Build settings:
    - Build command: `npm run build`
    - Deploy command: `npx wrangler deploy`
-3. Every push to the connected branch builds `dist/` and deploys the Worker.
-   The Worker serves the static site and handles `POST /api/enquiry`.
+3. Every push to the connected branch builds `dist/` (static pages plus the
+   adapter's `dist/_worker.js`) and deploys the Worker, which serves the
+   static site and handles `POST /api/enquiry`.
 4. Configure enquiry email delivery:
-   - Set `DESTINATION_EMAIL` and `FROM_EMAIL` in `worker/index.ts`
+   - Set `DESTINATION_EMAIL` and `FROM_EMAIL` in `src/pages/api/enquiry.ts`
      (the sending domain must be verified in [Resend](https://resend.com)).
    - Add the API key as a secret: `npx wrangler secret put RESEND_API_KEY`
      (or Worker → Settings → Variables and Secrets in the dashboard).
@@ -62,13 +63,12 @@ src/
   layouts/BaseLayout.astro  # head, SEO, Open Graph, JSON-LD
   components/           # SiteNav, Hero, Collection, StoneSection, AboutSale, Enquiry
   pages/index.astro     # the single page
+  pages/api/enquiry.ts  # server route — emails enquiries (runs in the Worker)
   assets/               # processed responsive images
 public/
   documents/            # place certificate / valuation PDFs here (see README.txt)
-  robots.txt, llms.txt, og-image.jpg, favicon.svg
-worker/
-  index.ts              # Cloudflare Worker — serves assets, emails enquiries
-wrangler.jsonc          # Worker config (name, assets binding)
+  robots.txt, llms.txt, og-image.jpg, favicon.svg, .assetsignore
+wrangler.jsonc          # Worker config (name, adapter output, assets binding)
 ```
 
 ## Updating stone details

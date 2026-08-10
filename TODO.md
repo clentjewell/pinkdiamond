@@ -44,7 +44,7 @@ extracted. Every item below needs your input before the site can launch.
 
 ## 4. Contact and enquiry routing
 
-- [ ] `worker/index.ts` — set `DESTINATION_EMAIL` (currently
+- [ ] `src/pages/api/enquiry.ts` — set `DESTINATION_EMAIL` (currently
       `[TODO: enquiry email]`) and `FROM_EMAIL` (the sending domain must be
       verified in Resend).
 - [ ] Create a [Resend](https://resend.com) API key and add it to the

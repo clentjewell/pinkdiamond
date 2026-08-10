@@ -1,6 +1,6 @@
 /**
- * Cloudflare Worker — serves the static site (via the assets binding) and
- * handles the enquiry form at POST /api/enquiry, emailing it through Resend.
+ * Enquiry endpoint — runs in the Cloudflare Worker produced by the
+ * @astrojs/cloudflare adapter, and emails the enquiry through Resend.
  *
  * Before launch:
  *   1. Replace DESTINATION_EMAIL below with the real enquiry inbox.
@@ -9,13 +9,12 @@
  *      (or Workers dashboard → Settings → Variables and Secrets).
  */
 
+import type { APIRoute } from 'astro';
+
+export const prerender = false;
+
 const DESTINATION_EMAIL = '[TODO: enquiry email]';
 const FROM_EMAIL = '[TODO: sending address on a Resend-verified domain]';
-
-interface Env {
-  ASSETS: Fetcher;
-  RESEND_API_KEY?: string;
-}
 
 function json(payload: unknown, status = 200): Response {
   return new Response(JSON.stringify(payload), {
@@ -24,7 +23,7 @@ function json(payload: unknown, status = 200): Response {
   });
 }
 
-async function handleEnquiry(request: Request, env: Env): Promise<Response> {
+export const POST: APIRoute = async ({ request, locals }) => {
   const form = await request.formData();
 
   // Honeypot: real visitors never see this field.
@@ -42,7 +41,8 @@ async function handleEnquiry(request: Request, env: Env): Promise<Response> {
     return json({ ok: false, error: 'Missing required fields.' }, 400);
   }
 
-  if (!env.RESEND_API_KEY) {
+  const apiKey = locals.runtime?.env?.RESEND_API_KEY;
+  if (!apiKey) {
     return json({ ok: false, error: 'Email delivery is not configured.' }, 503);
   }
 
@@ -62,7 +62,7 @@ async function handleEnquiry(request: Request, env: Env): Promise<Response> {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${env.RESEND_API_KEY}`,
+      Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
       from: `The Argyle Collection <${FROM_EMAIL}>`,
@@ -78,17 +78,4 @@ async function handleEnquiry(request: Request, env: Env): Promise<Response> {
   }
 
   return json({ ok: true });
-}
-
-export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
-    const url = new URL(request.url);
-
-    if (url.pathname === '/api/enquiry') {
-      if (request.method === 'POST') return handleEnquiry(request, env);
-      return json({ ok: false, error: 'Method not allowed.' }, 405);
-    }
-
-    return env.ASSETS.fetch(request);
-  },
 };

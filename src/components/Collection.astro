@@ -1,0 +1,107 @@
+---
+import { Image } from 'astro:assets';
+import { stones } from '../data/stones';
+
+const images = import.meta.glob<{ default: ImageMetadata }>('../assets/stone-*.jpg', {
+  eager: true,
+});
+
+function imageFor(key: string): ImageMetadata {
+  const match = images[`../assets/${key}.jpg`];
+  if (!match) throw new Error(`Missing asset: src/assets/${key}.jpg`);
+  return match.default;
+}
+---
+
+<section id="collection">
+  <div class="container">
+    <p class="eyebrow">The Collection</p>
+    <h2>Three stones, one origin</h2>
+    <p class="prose intro">
+      Each stone in this offering was recovered from the Argyle Diamond Mine in Western
+      Australia’s East Kimberley — the source of more than ninety per cent of the world’s pink
+      diamonds until its closure in 2020. The three are offered individually or as a collection,
+      each with complete certification.
+    </p>
+
+    <ul class="cards">
+      {
+        stones.map((stone) => (
+          <li>
+            <a class="card" href={`#${stone.id}`}>
+              <Image
+                src={imageFor(stone.image)}
+                widths={[400, 640, 900]}
+                sizes="(max-width: 700px) 90vw, 30vw"
+                alt={stone.imageAlt}
+                loading="lazy"
+              />
+              <div class="card-body">
+                <h3>{stone.name}</h3>
+                <p class="card-meta">{stone.carat}</p>
+                <p class="card-meta">{stone.argyleColourGrade}</p>
+                <span class="card-link">View details</span>
+              </div>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  .intro {
+    margin-top: 1.5rem;
+  }
+
+  .cards {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+    gap: clamp(1.25rem, 3vw, 2.5rem);
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+  }
+
+  .card {
+    display: block;
+    background: var(--bg-raised);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    overflow: hidden;
+    color: var(--text);
+    transition: border-color 0.25s ease, transform 0.25s ease;
+  }
+
+  .card:hover,
+  .card:focus-visible {
+    border-color: var(--accent-deep);
+    transform: translateY(-3px);
+  }
+
+  .card :global(img) {
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+  }
+
+  .card-body {
+    padding: 1.4rem 1.5rem 1.6rem;
+  }
+
+  .card-meta {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 0.4rem;
+    overflow-wrap: anywhere;
+  }
+
+  .card-link {
+    display: inline-block;
+    margin-top: 1rem;
+    font-size: 0.75rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+</style>

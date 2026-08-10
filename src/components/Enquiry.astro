@@ -1,0 +1,217 @@
+---
+---
+
+<section id="enquiry">
+  <div class="container">
+    <p class="eyebrow">Enquiries</p>
+    <h2>Register your interest</h2>
+    <p class="prose">
+      This offering is intended for auction houses, specialist dealers and qualified private
+      buyers. Please state which stone or stones you are enquiring about and the capacity in
+      which you act. All enquiries are handled in confidence.
+    </p>
+
+    <div class="enquiry-grid">
+      <form class="enquiry-form" method="POST" action="/api/enquiry">
+        <div class="field">
+          <label for="name">Full name</label>
+          <input id="name" name="name" type="text" autocomplete="name" required />
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" autocomplete="email" required />
+        </div>
+        <div class="field">
+          <label for="phone">Telephone (optional)</label>
+          <input id="phone" name="phone" type="tel" autocomplete="tel" />
+        </div>
+        <div class="field">
+          <label for="capacity">Acting as</label>
+          <select id="capacity" name="capacity" required>
+            <option value="" selected disabled>Select…</option>
+            <option>Auction house</option>
+            <option>Dealer / trade</option>
+            <option>Private buyer</option>
+            <option>Buyer's representative</option>
+          </select>
+        </div>
+        <div class="field field-wide">
+          <label for="message">Enquiry</label>
+          <textarea id="message" name="message" rows="5" required></textarea>
+        </div>
+        <!-- Honeypot field: hidden from humans, rejected server-side when filled. -->
+        <div class="hp" aria-hidden="true">
+          <label for="company">Company</label>
+          <input id="company" name="company" type="text" tabindex="-1" autocomplete="off" />
+        </div>
+        <button class="submit" type="submit">Submit enquiry</button>
+        <p class="form-status" role="status" aria-live="polite"></p>
+      </form>
+
+      <aside class="direct">
+        <h3>Direct contact</h3>
+        <p class="prose">Vendor’s representative</p>
+        <ul>
+          <li>[TODO: contact telephone number]</li>
+          <li>[TODO: contact email address]</li>
+        </ul>
+        <p class="prose small">
+          Inspections by appointment only. Verification of funds may be requested prior to
+          inspection.
+        </p>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<style>
+  #enquiry {
+    border-top: 1px solid var(--line);
+    background: var(--bg-raised);
+  }
+
+  .enquiry-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 4fr);
+    gap: clamp(2rem, 5vw, 4rem);
+    margin-top: 2.5rem;
+  }
+
+  @media (max-width: 900px) {
+    .enquiry-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .enquiry-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+  }
+
+  @media (max-width: 640px) {
+    .enquiry-form {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .field-wide {
+    grid-column: 1 / -1;
+  }
+
+  label {
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  input,
+  select,
+  textarea {
+    background: var(--bg-panel);
+    border: 1px solid var(--line);
+    border-radius: 2px;
+    color: var(--text);
+    font: inherit;
+    padding: 0.75rem 0.9rem;
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    border-color: var(--accent-deep);
+  }
+
+  .hp {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .submit {
+    grid-column: 1 / -1;
+    justify-self: start;
+    font-size: 0.8rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    background: var(--accent);
+    color: #241318;
+    border: 1px solid var(--accent-deep);
+    border-radius: 2px;
+    padding: 0.9rem 2rem;
+    cursor: pointer;
+  }
+
+  .submit:hover {
+    background: var(--text);
+  }
+
+  .submit:disabled {
+    opacity: 0.6;
+    cursor: wait;
+  }
+
+  .form-status {
+    grid-column: 1 / -1;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    min-height: 1.4em;
+  }
+
+  .direct h3 {
+    margin-bottom: 1rem;
+  }
+
+  .direct ul {
+    list-style: none;
+    margin-top: 0.5rem;
+    color: var(--text);
+  }
+
+  .direct li {
+    padding-block: 0.3rem;
+  }
+
+  .small {
+    margin-top: 1.5rem;
+    font-size: 0.85rem;
+  }
+</style>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('.enquiry-form');
+  const status = document.querySelector<HTMLParagraphElement>('.form-status');
+  const submit = form?.querySelector<HTMLButtonElement>('.submit');
+
+  form?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (!status || !submit) return;
+
+    submit.disabled = true;
+    status.textContent = 'Sending…';
+
+    try {
+      const response = await fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+      });
+      if (!response.ok) throw new Error(`Request failed (${response.status})`);
+      form.reset();
+      status.textContent = 'Thank you. Your enquiry has been received and will be answered in confidence.';
+    } catch {
+      status.textContent =
+        'The enquiry could not be sent. Please try again, or contact the vendor’s representative directly.';
+    } finally {
+      submit.disabled = false;
+    }
+  });
+</script>

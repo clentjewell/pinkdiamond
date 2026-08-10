@@ -1,0 +1,42 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteNav from '../components/SiteNav.astro';
+import Hero from '../components/Hero.astro';
+import Collection from '../components/Collection.astro';
+import StoneSection from '../components/StoneSection.astro';
+import AboutSale from '../components/AboutSale.astro';
+import Enquiry from '../components/Enquiry.astro';
+import { stones } from '../data/stones';
+
+const title = 'Three Argyle Pink Diamonds — Private Treaty Sale';
+const description =
+  'Three certified Argyle pink diamonds offered by private treaty. Each stone is accompanied by its Argyle certificate, GIA report and independent valuation. Enquiries in confidence.';
+---
+
+<BaseLayout title={title} description={description} ogImage="/og-image.jpg">
+  <SiteNav />
+  <main>
+    <Hero />
+    <Collection />
+    {stones.map((stone) => <StoneSection stone={stone} />)}
+    <AboutSale />
+    <Enquiry />
+  </main>
+  <footer class="site-footer">
+    <div class="container">
+      <p>
+        The Argyle Collection · Private treaty sale · All documentation verifiable with GIA and
+        the Argyle Pink Diamonds registry.
+      </p>
+    </div>
+  </footer>
+</BaseLayout>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--line);
+    padding-block: 2.5rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+</style>

@@ -1,0 +1,165 @@
+---
+import { stones } from '../data/stones';
+---
+
+<header class="site-nav">
+  <nav class="container nav-inner" aria-label="Page sections">
+    <a class="wordmark" href="#top">The Argyle Collection</a>
+    <button
+      class="nav-toggle"
+      type="button"
+      aria-expanded="false"
+      aria-controls="nav-links"
+      aria-label="Toggle navigation"
+    >
+      <span></span><span></span>
+    </button>
+    <ul id="nav-links" class="nav-links">
+      <li><a href="#collection">The Collection</a></li>
+      {stones.map((stone) => <li><a href={`#${stone.id}`}>{stone.shortTitle}</a></li>)}
+      <li><a href="#about-the-sale">The Sale</a></li>
+      <li><a class="nav-cta" href="#enquiry">Enquire</a></li>
+    </ul>
+  </nav>
+</header>
+
+<style>
+  .site-nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .nav-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 4rem;
+  }
+
+  .wordmark {
+    font-family: var(--serif);
+    font-size: 1.15rem;
+    letter-spacing: 0.06em;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: clamp(1rem, 2.5vw, 2rem);
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .nav-links a:hover,
+  .nav-links a:focus-visible {
+    color: var(--text);
+  }
+
+  .nav-cta {
+    color: var(--accent) !important;
+    border: 1px solid var(--accent-deep);
+    padding: 0.45rem 1.1rem;
+    border-radius: 2px;
+  }
+
+  .nav-cta:hover,
+  .nav-cta:focus-visible {
+    color: var(--bg) !important;
+    background: var(--accent);
+  }
+
+  .nav-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    width: 2.5rem;
+    height: 2.5rem;
+    background: none;
+    border: 0;
+    cursor: pointer;
+  }
+
+  .nav-toggle span {
+    display: block;
+    height: 1px;
+    width: 1.4rem;
+    margin-inline: auto;
+    background: var(--text);
+    transition: transform 0.25s ease;
+  }
+
+  @media (max-width: 860px) {
+    .nav-toggle {
+      display: flex;
+    }
+
+    .nav-links {
+      display: none;
+      position: absolute;
+      inset-inline: 0;
+      top: 100%;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0;
+      background: var(--bg-raised);
+      border-bottom: 1px solid var(--line);
+      padding-block: 0.5rem;
+    }
+
+    .nav-links.is-open {
+      display: flex;
+    }
+
+    .nav-links a {
+      display: block;
+      padding: 0.85rem var(--gutter);
+    }
+
+    .nav-cta {
+      border: 0;
+      margin: 0.5rem var(--gutter);
+      text-align: center;
+      border: 1px solid var(--accent-deep);
+    }
+
+    .nav-toggle[aria-expanded='true'] span:first-child {
+      transform: translateY(3.5px) rotate(45deg);
+    }
+
+    .nav-toggle[aria-expanded='true'] span:last-child {
+      transform: translateY(-3.5px) rotate(-45deg);
+    }
+  }
+</style>
+
+<script>
+  const toggle = document.querySelector('.nav-toggle');
+  const links = document.getElementById('nav-links');
+
+  toggle?.addEventListener('click', () => {
+    const open = toggle.getAttribute('aria-expanded') === 'true';
+    toggle.setAttribute('aria-expanded', String(!open));
+    links?.classList.toggle('is-open', !open);
+  });
+
+  links?.addEventListener('click', (event) => {
+    if ((event.target as HTMLElement).tagName === 'A') {
+      toggle?.setAttribute('aria-expanded', 'false');
+      links.classList.remove('is-open');
+    }
+  });
+</script>

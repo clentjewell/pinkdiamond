@@ -1,0 +1,27 @@
+# The Argyle Collection
+
+> Private treaty sale of three certified Argyle pink diamonds from the Argyle
+> Diamond Mine, East Kimberley, Western Australia. The mine closed in November
+> 2020 and no new supply of Argyle pink diamonds exists.
+
+This is a single-page site presenting the three stones to auction houses,
+specialist dealers and vetted private buyers.
+
+## What is offered
+
+- Three Argyle pink diamonds, each certified by Argyle Pink Diamonds and
+  accompanied by a GIA coloured diamond report and an independent valuation.
+- Prices are on application only; no figures are published.
+- The stones are held in secure vaulted storage in Australia and may be
+  inspected by appointment through the vendor's representative.
+- All documentation is verifiable directly with GIA and the Argyle Pink
+  Diamonds registry.
+
+## Sections
+
+- /#collection — overview of the three stones
+- /#stone-i — Stone I: specifications, provenance, documentation
+- /#stone-ii — Stone II: specifications, provenance, documentation
+- /#stone-iii — Stone III: specifications, provenance, documentation
+- /#about-the-sale — sale terms and verification
+- /#enquiry — enquiry form for serious buyers

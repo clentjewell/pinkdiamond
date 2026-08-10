@@ -1,0 +1,73 @@
+---
+import '@fontsource/inter/400.css';
+import '@fontsource/inter/500.css';
+import '@fontsource/cormorant-garamond/500.css';
+import '@fontsource/cormorant-garamond/600.css';
+import '../styles/global.css';
+import { stones } from '../data/stones';
+
+interface Props {
+  title: string;
+  description: string;
+  ogImage: string;
+}
+
+const { title, description, ogImage } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImageUrl = new URL(ogImage, Astro.site);
+
+const organizationLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'The Argyle Collection', // [TODO: confirm selling entity name for structured data]
+  url: Astro.site?.toString(),
+  description:
+    'Private treaty sale of three certified Argyle pink diamonds, offered with Argyle certificates, GIA reports and independent valuations.',
+};
+
+const productLds = stones.map((stone) => ({
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: `Argyle Pink Diamond — ${stone.name}`,
+  description: `Certified Argyle pink diamond offered by private treaty. Carat: ${stone.carat}. Argyle colour grade: ${stone.argyleColourGrade}. Clarity: ${stone.clarity}.`,
+  image: ogImageUrl.toString(),
+  url: `${canonical.toString()}#${stone.id}`,
+  brand: { '@type': 'Brand', name: 'Argyle Pink Diamonds' },
+  offers: {
+    '@type': 'Offer',
+    availability: 'https://schema.org/InStock',
+    priceCurrency: 'AUD',
+    url: `${canonical.toString()}#enquiry`,
+  },
+}));
+---
+
+<!doctype html>
+<html lang="en-AU">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <meta name="generator" content={Astro.generator} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageUrl} />
+
+    <script type="application/ld+json" set:html={JSON.stringify(organizationLd)} />
+    {productLds.map((ld) => <script type="application/ld+json" set:html={JSON.stringify(ld)} />)}
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

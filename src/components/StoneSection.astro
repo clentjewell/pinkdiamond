@@ -1,0 +1,189 @@
+---
+import { Image } from 'astro:assets';
+import type { Stone } from '../data/stones';
+
+interface Props {
+  stone: Stone;
+}
+
+const { stone } = Astro.props;
+
+const images = import.meta.glob<{ default: ImageMetadata }>('../assets/stone-*.jpg', {
+  eager: true,
+});
+
+function imageFor(key: string): ImageMetadata {
+  const match = images[`../assets/${key}.jpg`];
+  if (!match) throw new Error(`Missing asset: src/assets/${key}.jpg`);
+  return match.default;
+}
+
+const specs: Array<[string, string]> = [
+  ['Carat weight', stone.carat],
+  ['Argyle colour grade', stone.argyleColourGrade],
+  ['GIA colour grade', stone.giaColourGrade],
+  ['Clarity', stone.clarity],
+  ['Cut / shape', stone.cutShape],
+  ['Argyle certificate no.', stone.argyleCertificateNo],
+  ['GIA report no.', stone.giaReportNo],
+  ['Argyle lot / inscription no.', stone.argyleLotInscriptionNo],
+];
+---
+
+<section id={stone.id} class="stone" aria-labelledby={`${stone.id}-heading`}>
+  <div class="container">
+    <p class="eyebrow">{stone.name}</p>
+    <h2 id={`${stone.id}-heading`}>Argyle Pink Diamond · {stone.name}</h2>
+
+    <div class="stone-grid">
+      <figure class="gallery">
+        <Image
+          src={imageFor(stone.image)}
+          widths={[480, 800, 1200]}
+          sizes="(max-width: 900px) 92vw, 44vw"
+          alt={stone.imageAlt}
+          loading="lazy"
+        />
+        <figcaption>
+          [TODO: replace with the attached photography for {stone.name} — current image is an
+          AI-generated placeholder and must not be shown to buyers]
+        </figcaption>
+      </figure>
+
+      <div class="details">
+        <h3>Specifications</h3>
+        <table class="spec-table">
+          <tbody>
+            {
+              specs.map(([label, value]) => (
+                <tr>
+                  <th scope="row">{label}</th>
+                  <td>{value}</td>
+                </tr>
+              ))
+            }
+            <tr>
+              <th scope="row">Price</th>
+              <td class="poa">Price on application</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Provenance</h3>
+        <p class="prose">{stone.provenance.origin}</p>
+        <p class="prose">{stone.provenance.tenderHistory}</p>
+        <p class="prose">{stone.provenance.chainOfCustody}</p>
+
+        <h3>Documentation</h3>
+        <ul class="documents">
+          {
+            stone.documents.map((doc) => (
+              <li>
+                <a href={doc.href} download>
+                  {doc.label} (PDF)
+                </a>
+                {doc.todo && <span class="doc-todo">{doc.todo}</span>}
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .stone {
+    border-top: 1px solid var(--line);
+    background: linear-gradient(to bottom, var(--bg-raised), var(--bg) 30%);
+  }
+
+  .stone-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+    gap: clamp(2rem, 5vw, 4.5rem);
+    margin-top: clamp(2rem, 4vw, 3.5rem);
+    align-items: start;
+  }
+
+  @media (max-width: 900px) {
+    .stone-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .gallery :global(img) {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 2px;
+  }
+
+  .gallery figcaption {
+    margin-top: 0.75rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .details h3 {
+    margin-top: 2.25rem;
+  }
+
+  .details h3:first-child {
+    margin-top: 0;
+  }
+
+  .details p {
+    margin-top: 0.75rem;
+  }
+
+  .spec-table {
+    width: 100%;
+    margin-top: 1rem;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+
+  .spec-table th,
+  .spec-table td {
+    text-align: left;
+    padding: 0.7rem 0;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+
+  .spec-table th {
+    font-weight: 500;
+    color: var(--text-muted);
+    padding-right: 1.5rem;
+    white-space: nowrap;
+  }
+
+  .spec-table td {
+    color: var(--text);
+    overflow-wrap: anywhere;
+  }
+
+  .poa {
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+  }
+
+  .documents {
+    list-style: none;
+    margin-top: 1rem;
+  }
+
+  .documents li {
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.9rem;
+  }
+
+  .doc-todo {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+</style>

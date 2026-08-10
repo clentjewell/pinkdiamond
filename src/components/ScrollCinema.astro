@@ -3,7 +3,11 @@
  * Scroll-driven cinema hero. A pinned full-viewport video is scrubbed by the
  * scroll position: it opens paused on all three stones, then the playhead
  * travels to each stone in turn while that stone's summary card fades in.
- * The mapping holds the playhead still (a plateau) while each card is up.
+ *
+ * All motion is continuous and scroll-mapped: camera moves ease in and out,
+ * the playhead keeps a barely-perceptible drift while a card is up (so the
+ * frame never feels frozen), and card opacity is a smooth function of scroll
+ * position — reversing scroll plays every transition backwards identically.
  *
  * Falls back to the static hero image when the video cannot play, when JS is
  * disabled, or when the visitor prefers reduced motion.
@@ -105,7 +109,7 @@ import { stones } from '../data/stones';
 <style>
   .cinema-track {
     /* Tall track: scrolling through it drives the video playhead. */
-    height: 520vh;
+    height: 600vh;
   }
 
   .cinema-viewport {
@@ -161,7 +165,7 @@ import { stones } from '../data/stones';
         to top,
         var(--bg) 3%,
         color-mix(in srgb, var(--bg) 45%, transparent) 40%,
-        color-mix(in srgb, var(--bg) 20%, transparent) 100%
+        color-mix(in srgb, var(--bg) 18%, transparent) 100%
       );
   }
 
@@ -173,22 +177,15 @@ import { stones } from '../data/stones';
     padding-bottom: clamp(3rem, 9vh, 6rem);
     opacity: 0;
     visibility: hidden;
-    transform: translateY(1.25rem);
-    transition:
-      opacity 0.5s ease,
-      transform 0.5s ease,
-      visibility 0s linear 0.5s;
     pointer-events: none;
+    will-change: opacity, transform;
   }
 
+  /* Static state used before JS runs and in the no-video fallback. Once the
+     scrub script is driving, inline styles take over. */
   .stage.is-active {
     opacity: 1;
     visibility: visible;
-    transform: none;
-    transition:
-      opacity 0.5s ease,
-      transform 0.5s ease,
-      visibility 0s;
     pointer-events: auto;
   }
 
@@ -218,18 +215,19 @@ import { stones } from '../data/stones';
     width: 1px;
     height: 2.4rem;
     background: linear-gradient(to bottom, transparent, var(--accent));
-    animation: cue 2.2s ease-in-out infinite;
+    transform-origin: top;
+    animation: cue 2.6s cubic-bezier(0.45, 0, 0.55, 1) infinite;
   }
 
   @keyframes cue {
     0%,
     100% {
-      transform: scaleY(0.5);
-      opacity: 0.4;
+      transform: scaleY(0.45);
+      opacity: 0.35;
     }
     50% {
       transform: scaleY(1);
-      opacity: 1;
+      opacity: 0.9;
     }
   }
 
@@ -240,18 +238,21 @@ import { stones } from '../data/stones';
   }
 
   .stone-card {
-    max-width: 26rem;
-    background: color-mix(in srgb, var(--bg) 72%, transparent);
-    backdrop-filter: blur(14px);
-    border: 1px solid var(--line);
-    border-radius: 2px;
+    max-width: 24rem;
+    background: color-mix(in srgb, var(--bg) 62%, transparent);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+    border-radius: 3px;
     padding: 1.75rem 2rem 2rem;
+    box-shadow: 0 30px 60px -30px rgb(0 0 0 / 0.55);
   }
 
   .stage-count {
     color: var(--text-muted);
     letter-spacing: 0.2em;
     margin-left: 0.6rem;
+    font-size: 0.65rem;
   }
 
   .stone-card-title {
@@ -270,7 +271,7 @@ import { stones } from '../data/stones';
     display: flex;
     justify-content: space-between;
     gap: 1rem;
-    border-bottom: 1px solid var(--line);
+    border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
     padding-bottom: 0.65rem;
   }
 
@@ -311,6 +312,10 @@ import { stones } from '../data/stones';
     padding: 0.85rem 1.8rem;
     border-radius: 2px;
     border: 1px solid var(--accent-deep);
+    transition:
+      background-color 0.35s ease,
+      border-color 0.35s ease,
+      color 0.35s ease;
   }
 
   .button-primary {
@@ -342,39 +347,64 @@ import { stones } from '../data/stones';
 
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  /** Smooth ease used for camera travel and card fades. */
+  const smooth = (t: number) => t * t * (3 - 2 * t);
+
   /**
-   * Scroll progress → [video time fraction, active stage].
-   * Plateaus hold the playhead still while a stone card is displayed.
+   * Playhead map: scroll progress → video time fraction.
+   * "move" segments ease between stones; "drift" segments keep a very slow
+   * creep while a card is displayed so the frame never feels frozen.
    */
-  const KEYFRAMES: Array<{ at: number; time: number; stage: string | null }> = [
-    { at: 0.0, time: 0.0, stage: 'intro' },
-    { at: 0.12, time: 0.0, stage: 'intro' },
-    { at: 0.2, time: 0.3, stage: 'stone-0' },
-    { at: 0.36, time: 0.3, stage: 'stone-0' },
-    { at: 0.44, time: 0.6, stage: 'stone-1' },
-    { at: 0.6, time: 0.6, stage: 'stone-1' },
-    { at: 0.68, time: 0.92, stage: 'stone-2' },
-    { at: 0.84, time: 0.92, stage: 'stone-2' },
-    { at: 0.9, time: 1.0, stage: 'outro' },
-    { at: 1.0, time: 1.0, stage: 'outro' },
+  const TIME_SEGMENTS: Array<{ from: number; to: number; a: number; b: number; ease: boolean }> = [
+    { from: 0.0, to: 0.16, a: 0.0, b: 0.045, ease: false }, // intro drift
+    { from: 0.16, to: 0.26, a: 0.045, b: 0.3, ease: true }, // travel to stone I
+    { from: 0.26, to: 0.42, a: 0.3, b: 0.345, ease: false }, // drift on stone I
+    { from: 0.42, to: 0.52, a: 0.345, b: 0.6, ease: true }, // travel to stone II
+    { from: 0.52, to: 0.68, a: 0.6, b: 0.645, ease: false }, // drift on stone II
+    { from: 0.68, to: 0.78, a: 0.645, b: 0.9, ease: true }, // travel to stone III
+    { from: 0.78, to: 0.92, a: 0.9, b: 0.94, ease: false }, // drift on stone III
+    { from: 0.92, to: 1.0, a: 0.94, b: 1.0, ease: true }, // settle
   ];
 
-  function mapProgress(p: number): { time: number; stage: string | null } {
-    for (let i = 1; i < KEYFRAMES.length; i++) {
-      const a = KEYFRAMES[i - 1];
-      const b = KEYFRAMES[i];
-      if (p <= b.at) {
-        const span = b.at - a.at || 1;
-        const local = (p - a.at) / span;
-        return { time: a.time + (b.time - a.time) * local, stage: b.stage };
+  /**
+   * Card visibility ramps: [fade-in start, fully visible, start fading, gone].
+   * Ramps are generous and symmetric, so scrolling back rewinds gracefully.
+   */
+  const STAGE_BANDS: Record<string, [number, number, number, number]> = {
+    intro: [-1, 0, 0.08, 0.17],
+    'stone-0': [0.21, 0.28, 0.37, 0.44],
+    'stone-1': [0.47, 0.54, 0.63, 0.7],
+    'stone-2': [0.73, 0.8, 0.87, 0.915],
+    outro: [0.93, 0.985, 2, 3],
+  };
+
+  function stageOpacity(stage: string, p: number): number {
+    const band = STAGE_BANDS[stage];
+    if (!band) return 0;
+    const [inStart, inEnd, outStart, outEnd] = band;
+    if (p <= inStart || p >= outEnd) return 0;
+    if (p < inEnd) return smooth((p - inStart) / (inEnd - inStart));
+    if (p > outStart) return 1 - smooth((p - outStart) / (outEnd - outStart));
+    return 1;
+  }
+
+  function timeFraction(p: number): number {
+    for (const s of TIME_SEGMENTS) {
+      if (p <= s.to) {
+        const local = Math.min(1, Math.max(0, (p - s.from) / (s.to - s.from)));
+        return s.a + (s.b - s.a) * (s.ease ? smooth(local) : local);
       }
     }
-    const last = KEYFRAMES[KEYFRAMES.length - 1];
-    return { time: last.time, stage: last.stage };
+    return 1;
   }
 
   function disableCinema() {
     cinema?.classList.add('no-video');
+    for (const el of stages) {
+      el.style.opacity = '';
+      el.style.visibility = '';
+      el.style.transform = '';
+    }
   }
 
   if (!cinema || !track || !video || reducedMotion) {
@@ -383,68 +413,56 @@ import { stones } from '../data/stones';
     video.addEventListener('error', disableCinema);
 
     let duration = 0;
-    let targetTime = 0;
-    let currentTime = 0;
-    let activeStage: string | null = null;
-    let ticking = false;
-
-    function setStage(stage: string | null) {
-      if (stage === activeStage) return;
-      activeStage = stage;
-      for (const el of stages) {
-        el.classList.toggle('is-active', el.dataset.stage === stage);
-      }
-    }
+    let progress = 0;
+    let shownTime = -1;
 
     function readScroll() {
       const rect = track!.getBoundingClientRect();
       const total = rect.height - window.innerHeight;
-      const p = total > 0 ? Math.min(1, Math.max(0, -rect.top / total)) : 0;
-      const mapped = mapProgress(p);
-      targetTime = mapped.time * duration;
-      setStage(mapped.stage);
+      progress = total > 0 ? Math.min(1, Math.max(0, -rect.top / total)) : 0;
     }
 
-    // Smooth the playhead toward the scroll target so scrubbing feels
-    // weighted rather than jittery.
-    function animate() {
+    function render() {
+      // Weighted playhead: glide toward the scroll target rather than snap.
       if (duration > 0) {
-        currentTime += (targetTime - currentTime) * 0.18;
-        if (Math.abs(targetTime - currentTime) > 0.005) {
+        const target = timeFraction(progress) * duration;
+        const current = shownTime < 0 ? target : shownTime;
+        const next = current + (target - current) * 0.09;
+        if (Math.abs(next - (shownTime < 0 ? -1 : shownTime)) > 1 / 120) {
+          shownTime = next;
           try {
-            video!.currentTime = currentTime;
+            video!.currentTime = shownTime;
           } catch {
             /* seek not ready yet */
           }
         }
       }
-      requestAnimationFrame(animate);
+
+      // Continuous, symmetric card fades driven directly by scroll.
+      for (const el of stages) {
+        const stage = el.dataset.stage ?? '';
+        const o = stageOpacity(stage, progress);
+        el.style.opacity = o.toFixed(3);
+        el.style.visibility = o > 0.001 ? 'visible' : 'hidden';
+        el.style.transform = `translateY(${((1 - o) * 14).toFixed(2)}px)`;
+        el.style.pointerEvents = o > 0.55 ? 'auto' : 'none';
+        el.classList.remove('is-active');
+      }
+
+      requestAnimationFrame(render);
     }
 
     video.addEventListener('loadedmetadata', () => {
       duration = video.duration || 0;
-      readScroll();
     });
     if (video.readyState >= 1) {
       duration = video.duration || 0;
     }
 
-    window.addEventListener(
-      'scroll',
-      () => {
-        if (!ticking) {
-          ticking = true;
-          requestAnimationFrame(() => {
-            ticking = false;
-            readScroll();
-          });
-        }
-      },
-      { passive: true }
-    );
+    window.addEventListener('scroll', readScroll, { passive: true });
     window.addEventListener('resize', readScroll, { passive: true });
 
     readScroll();
-    requestAnimationFrame(animate);
+    requestAnimationFrame(render);
   }
 </script>

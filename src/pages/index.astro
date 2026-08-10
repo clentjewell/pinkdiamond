@@ -73,7 +73,7 @@ const description =
 
     targets.forEach((el, i) => {
       el.classList.add('reveal');
-      (el as HTMLElement).style.transitionDelay = `${(i % 3) * 90}ms`;
+      (el as HTMLElement).style.transitionDelay = `${(i % 3) * 70}ms`;
       observer.observe(el);
     });
   }

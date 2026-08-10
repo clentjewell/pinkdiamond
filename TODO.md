@@ -44,9 +44,12 @@ extracted. Every item below needs your input before the site can launch.
 
 ## 4. Contact and enquiry routing
 
-- [ ] `functions/api/enquiry.ts` — set `DESTINATION_EMAIL` (currently
-      `[TODO: enquiry email]`) and `FROM_EMAIL`, and add the MailChannels
-      Domain Lockdown DNS record for the sending domain.
+- [ ] `worker/index.ts` — set `DESTINATION_EMAIL` (currently
+      `[TODO: enquiry email]`) and `FROM_EMAIL` (the sending domain must be
+      verified in Resend).
+- [ ] Create a [Resend](https://resend.com) API key and add it to the
+      `pinkdiamond` Worker: `npx wrangler secret put RESEND_API_KEY`
+      (until it is set, the form returns "Email delivery is not configured").
 - [ ] `src/components/Enquiry.astro` — direct contact telephone and email for
       the vendor's representative.
 

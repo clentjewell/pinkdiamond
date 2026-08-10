@@ -1,7 +1,8 @@
 # The Argyle Collection — Private Sale Site
 
 Single-page static site presenting three Argyle pink diamonds for private
-treaty sale. Built with Astro (static output), designed for Cloudflare Pages.
+treaty sale. Built with Astro (static output), deployed as a Cloudflare
+Worker with static assets.
 
 > **Before launch:** work through `TODO.md`. The valuation documents and
 > photography referenced in the project brief were not present in this
@@ -13,8 +14,9 @@ treaty sale. Built with Astro (static output), designed for Cloudflare Pages.
 
 - [Astro 5](https://astro.build) — static output, no client framework
 - Minimal JS: mobile nav toggle and the enquiry form submission only
-- Cloudflare Pages Function (`functions/api/enquiry.ts`) emails enquiries via
-  MailChannels
+- Cloudflare Worker (`worker/index.ts`) serves the static build via the
+  assets binding and handles `POST /api/enquiry`, emailing enquiries via
+  Resend
 - `@astrojs/sitemap` for `sitemap-index.xml`; `robots.txt` and `llms.txt` in
   `/public`
 
@@ -27,23 +29,30 @@ npm run build    # outputs to dist/
 npm run preview
 ```
 
-## Deploying to Cloudflare Pages
+## Deploying to Cloudflare Workers
 
-1. Push this repository to GitHub.
-2. In the Cloudflare dashboard: **Workers & Pages → Create → Pages →
-   Connect to Git**, and select this repository.
-3. Build settings:
-   - Framework preset: **Astro**
+The repository is designed for the Workers Git integration (Workers Builds),
+deploying to a Worker named `pinkdiamond` (see `wrangler.jsonc`).
+
+1. In the Cloudflare dashboard: **Workers & Pages → Create → Workers →
+   Import a repository**, and select this repository (already done if the
+   `pinkdiamond` Worker exists).
+2. Build settings:
    - Build command: `npm run build`
-   - Build output directory: `dist`
-4. Deploy. The `functions/` directory is picked up automatically, so the
-   enquiry form endpoint is served at `/api/enquiry`.
-5. Set the production domain, then update:
+   - Deploy command: `npx wrangler deploy`
+3. Every push to the connected branch builds `dist/` and deploys the Worker.
+   The Worker serves the static site and handles `POST /api/enquiry`.
+4. Configure enquiry email delivery:
+   - Set `DESTINATION_EMAIL` and `FROM_EMAIL` in `worker/index.ts`
+     (the sending domain must be verified in [Resend](https://resend.com)).
+   - Add the API key as a secret: `npx wrangler secret put RESEND_API_KEY`
+     (or Worker → Settings → Variables and Secrets in the dashboard).
+5. Set the production domain (Worker → Settings → Domains & Routes), then
+   update:
    - `SITE` in `astro.config.mjs`
    - the `Sitemap:` line in `public/robots.txt`
-6. Configure the enquiry email in `functions/api/enquiry.ts`
-   (`DESTINATION_EMAIL`, `FROM_EMAIL`) and add the MailChannels Domain
-   Lockdown TXT record for the sending domain.
+
+Manual deploy from a machine with Cloudflare credentials: `npm run deploy`.
 
 ## Project structure
 
@@ -57,8 +66,9 @@ src/
 public/
   documents/            # place certificate / valuation PDFs here (see README.txt)
   robots.txt, llms.txt, og-image.jpg, favicon.svg
-functions/
-  api/enquiry.ts        # Cloudflare Pages Function — emails enquiries
+worker/
+  index.ts              # Cloudflare Worker — serves assets, emails enquiries
+wrangler.jsonc          # Worker config (name, assets binding)
 ```
 
 ## Updating stone details

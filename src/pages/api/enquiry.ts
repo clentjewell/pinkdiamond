@@ -2,19 +2,16 @@
  * Enquiry endpoint — runs in the Cloudflare Worker produced by the
  * @astrojs/cloudflare adapter, and emails the enquiry through Resend.
  *
- * Before launch:
- *   1. Replace DESTINATION_EMAIL below with the real enquiry inbox.
- *   2. Set FROM_EMAIL to an address on a domain verified in Resend.
- *   3. Add the API key as a secret:  npx wrangler secret put RESEND_API_KEY
- *      (or Workers dashboard → Settings → Variables and Secrets).
+ * Requires the RESEND_API_KEY secret on the Worker, and FROM_EMAIL's domain
+ * verified in Resend.
  */
 
 import type { APIRoute } from 'astro';
 
 export const prerender = false;
 
-const DESTINATION_EMAIL = '[TODO: enquiry email]';
-const FROM_EMAIL = '[TODO: sending address on a Resend-verified domain]';
+const DESTINATION_EMAIL = 'clent@jewellprojects.com';
+const FROM_EMAIL = 'enquiries@jewellprojects.com';
 
 function json(payload: unknown, status = 200): Response {
   return new Response(JSON.stringify(payload), {

@@ -44,12 +44,12 @@ extracted. Every item below needs your input before the site can launch.
 
 ## 4. Contact and enquiry routing
 
-- [ ] `src/pages/api/enquiry.ts` — set `DESTINATION_EMAIL` (currently
-      `[TODO: enquiry email]`) and `FROM_EMAIL` (the sending domain must be
-      verified in Resend).
-- [ ] Create a [Resend](https://resend.com) API key and add it to the
-      `pinkdiamond` Worker: `npx wrangler secret put RESEND_API_KEY`
-      (until it is set, the form returns "Email delivery is not configured").
+- [x] `src/pages/api/enquiry.ts` — enquiries deliver to
+      clent@jewellprojects.com, sent from enquiries@jewellprojects.com
+      (confirm jewellprojects.com is verified in Resend).
+- [x] Resend API key added to the `pinkdiamond` Worker as the
+      `RESEND_API_KEY` secret.
+- [ ] Send a test enquiry through the live form and confirm it arrives.
 - [ ] `src/components/Enquiry.astro` — direct contact telephone and email for
       the vendor's representative.
 

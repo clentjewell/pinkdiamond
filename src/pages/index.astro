@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteNav from '../components/SiteNav.astro';
-import Hero from '../components/Hero.astro';
+import ScrollCinema from '../components/ScrollCinema.astro';
 import Collection from '../components/Collection.astro';
 import StoneSection from '../components/StoneSection.astro';
 import AboutSale from '../components/AboutSale.astro';
@@ -16,7 +16,7 @@ const description =
 <BaseLayout title={title} description={description} ogImage="/og-image.jpg">
   <SiteNav />
   <main>
-    <Hero />
+    <ScrollCinema />
     <Collection />
     {stones.map((stone) => <StoneSection stone={stone} />)}
     <AboutSale />
@@ -40,3 +40,41 @@ const description =
     color: var(--text-muted);
   }
 </style>
+
+<script>
+  // Gentle scroll-reveal for content below the cinema. Elements only get the
+  // hidden state once JS runs, so a no-JS visit sees everything immediately.
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (!reduced && 'IntersectionObserver' in window) {
+    const targets = document.querySelectorAll(
+      [
+        'main section:not(.cinema) .eyebrow',
+        'main section:not(.cinema) h2',
+        'main section:not(.cinema) .intro',
+        '.cards > li',
+        '.stone-grid > *',
+        '.columns > *',
+        '.enquiry-grid > *',
+      ].join(', ')
+    );
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in-view');
+            observer.unobserve(entry.target);
+          }
+        }
+      },
+      { rootMargin: '0px 0px -8% 0px', threshold: 0.05 }
+    );
+
+    targets.forEach((el, i) => {
+      el.classList.add('reveal');
+      (el as HTMLElement).style.transitionDelay = `${(i % 3) * 90}ms`;
+      observer.observe(el);
+    });
+  }
+</script>

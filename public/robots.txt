@@ -1,5 +1,5 @@
-# [TODO: replace domain with the production domain before launch]
+# [TODO: update domain if a custom domain is attached]
 User-agent: *
 Allow: /
 
-Sitemap: https://argyle-collection.pages.dev/sitemap-index.xml
+Sitemap: https://pinkdiamond.clent.workers.dev/sitemap-index.xml

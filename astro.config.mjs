@@ -3,8 +3,8 @@ import { defineConfig } from 'astro/config';
 import sitemap from '@astrojs/sitemap';
 import cloudflare from '@astrojs/cloudflare';
 
-// [TODO: replace with the production domain before launch — used for canonical URLs, Open Graph and sitemap.xml]
-const SITE = 'https://argyle-collection.pages.dev';
+// Live Worker URL. [TODO: update if a custom domain is attached — used for canonical URLs, Open Graph and sitemap.xml]
+const SITE = 'https://pinkdiamond.clent.workers.dev';
 
 export default defineConfig({
   site: SITE,

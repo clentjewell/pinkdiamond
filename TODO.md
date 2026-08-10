@@ -13,6 +13,10 @@ extracted. Every item below needs your input before the site can launch.
   so the layout could be built. They do not depict the actual stones and must
   not be shown to buyers — presenting them as the stones on a credibility
   asset would be materially misleading.**
+- [ ] The scroll-driven hero video (`public/cinema.mp4`, plus
+      `public/cinema-poster.jpg`) is likewise AI-generated from the placeholder
+      hero image. Replace with footage of the actual stones before launch, or
+      remove the video files to fall back to the static hero.
 - [ ] Add any additional gallery angles per stone (the gallery currently shows
       one image per stone; extra images can be added in `StoneSection.astro`).
 - [ ] Update `public/og-image.jpg` (currently derived from the placeholder hero).

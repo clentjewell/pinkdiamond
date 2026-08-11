@@ -113,13 +113,13 @@ import { stones } from '../data/stones';
 <style>
   .cinema-track {
     /* Tall track: scrolling through it drives the video playhead. */
-    height: 600vh;
+    height: 320vh;
   }
 
   /* Phones scroll by thumb — keep the sequence shorter so it doesn't drag. */
   @media (max-width: 700px) {
     .cinema-track {
-      height: 420vh;
+      height: 230vh;
     }
   }
 
@@ -475,7 +475,7 @@ import { stones } from '../data/stones';
       if (duration > 0) {
         const target = timeFraction(progress) * duration;
         const current = shownTime < 0 ? target : shownTime;
-        const next = current + (target - current) * 0.09;
+        const next = current + (target - current) * 0.14;
         if (Math.abs(next - (shownTime < 0 ? -1 : shownTime)) > 1 / 120) {
           shownTime = next;
           try {

@@ -131,11 +131,21 @@ import { stones } from '../data/stones';
     display: none;
   }
 
+  /* The film fades in over the still once the first frame is decodable. */
+  .cinema-video {
+    opacity: 0;
+    transition: opacity 1.1s ease;
+  }
+
+  .cinema-video.is-ready {
+    opacity: 1;
+  }
+
   .cinema-scrim {
     position: absolute;
     inset: 0;
     background:
-      radial-gradient(ellipse at center, transparent 55%, rgb(0 0 0 / 0.3) 100%),
+      radial-gradient(ellipse at center, transparent 52%, rgb(0 0 0 / 0.42) 100%),
       linear-gradient(
         to top,
         color-mix(in srgb, var(--bg) 35%, transparent),
@@ -198,6 +208,46 @@ import { stones } from '../data/stones';
 
   .stage .container {
     width: 100%;
+  }
+
+  /* Quiet entrance for the opening titles on first load. */
+  .stage-intro .eyebrow,
+  .stage-intro h1,
+  .stage-intro .stage-lede,
+  .stage-intro .scroll-cue {
+    animation: title-in 1.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .stage-intro h1 {
+    animation-delay: 0.15s;
+  }
+
+  .stage-intro .stage-lede {
+    animation-delay: 0.3s;
+  }
+
+  .stage-intro .scroll-cue {
+    animation-delay: 0.55s;
+  }
+
+  @keyframes title-in {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .stage-intro .eyebrow,
+    .stage-intro h1,
+    .stage-intro .stage-lede,
+    .stage-intro .scroll-cue {
+      animation: none;
+    }
   }
 
   .stage-lede {
@@ -499,8 +549,12 @@ import { stones } from '../data/stones';
     video.addEventListener('loadedmetadata', () => {
       duration = video.duration || 0;
     });
+    video.addEventListener('loadeddata', () => video.classList.add('is-ready'));
     if (video.readyState >= 1) {
       duration = video.duration || 0;
+    }
+    if (video.readyState >= 2) {
+      video.classList.add('is-ready');
     }
 
     window.addEventListener('scroll', readScroll, { passive: true });

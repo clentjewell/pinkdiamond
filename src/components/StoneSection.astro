@@ -4,9 +4,18 @@ import type { Stone } from '../data/stones';
 
 interface Props {
   stone: Stone;
+  /** Position in the page's numbered sections, e.g. 2 → "02". */
+  number: number;
 }
 
-const { stone } = Astro.props;
+const { stone, number } = Astro.props;
+const sectionNo = String(number).padStart(2, '0');
+
+const provenance: Array<[string, string]> = [
+  ['Origin', stone.provenance.origin],
+  ['Tender history', stone.provenance.tenderHistory],
+  ['Chain of custody', stone.provenance.chainOfCustody],
+];
 
 const images = import.meta.glob<{ default: ImageMetadata }>('../assets/stone-*.jpg', {
   eager: true,
@@ -32,7 +41,7 @@ const specs: Array<[string, string]> = [
 
 <section id={stone.id} class="stone" aria-labelledby={`${stone.id}-heading`}>
   <div class="container">
-    <p class="eyebrow">{stone.name}</p>
+    <p class="eyebrow">{sectionNo} · {stone.name}</p>
     <h2 id={`${stone.id}-heading`}>Argyle Pink Diamond · {stone.name}</h2>
 
     <div class="stone-grid">
@@ -70,9 +79,16 @@ const specs: Array<[string, string]> = [
         </table>
 
         <h3>Provenance</h3>
-        <p class="prose">{stone.provenance.origin}</p>
-        <p class="prose">{stone.provenance.tenderHistory}</p>
-        <p class="prose">{stone.provenance.chainOfCustody}</p>
+        <ol class="timeline">
+          {
+            provenance.map(([label, text]) => (
+              <li>
+                <span class="timeline-label">{label}</span>
+                <p class="prose">{text}</p>
+              </li>
+            ))
+          }
+        </ol>
 
         <h3>Documentation</h3>
         <ul class="documents">
@@ -87,6 +103,11 @@ const specs: Array<[string, string]> = [
             ))
           }
         </ul>
+        <p class="verify">
+          Reports are independently verifiable via
+          <a href="https://www.gia.edu/report-check-landing" rel="noopener">GIA Report Check</a>
+          and the Argyle Pink Diamonds registry.
+        </p>
       </div>
     </div>
   </div>
@@ -147,20 +168,25 @@ const specs: Array<[string, string]> = [
   .spec-table td {
     text-align: left;
     padding: 0.7rem 0;
-    border-bottom: 1px solid var(--line);
+    border-bottom: 1px solid color-mix(in srgb, var(--line) 65%, transparent);
     vertical-align: top;
   }
 
   .spec-table th {
     font-weight: 500;
+    font-size: 0.7rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
     color: var(--text-muted);
     padding-right: 1.5rem;
+    padding-top: 0.85rem;
     white-space: nowrap;
   }
 
   .spec-table td {
     color: var(--text);
     overflow-wrap: anywhere;
+    font-variant-numeric: tabular-nums lining-nums;
   }
 
   .poa {
@@ -168,6 +194,51 @@ const specs: Array<[string, string]> = [
     letter-spacing: 0.08em;
     text-transform: uppercase;
     font-size: 0.8rem;
+  }
+
+  .timeline {
+    list-style: none;
+    margin-top: 1.25rem;
+    border-left: 1px solid color-mix(in srgb, var(--line) 80%, transparent);
+    padding-left: 1.5rem;
+    display: grid;
+    gap: 1.4rem;
+  }
+
+  .timeline li {
+    position: relative;
+  }
+
+  .timeline li::before {
+    content: '';
+    position: absolute;
+    left: calc(-1.5rem - 3.5px);
+    top: 0.45em;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-deep);
+  }
+
+  .timeline-label {
+    display: block;
+    font-size: 0.7rem;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.3rem;
+  }
+
+  .timeline .prose {
+    margin-top: 0;
+    font-size: 0.92rem;
+  }
+
+  .verify {
+    margin-top: 1.25rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-style: italic;
   }
 
   .documents {

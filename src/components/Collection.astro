@@ -15,7 +15,7 @@ function imageFor(key: string): ImageMetadata {
 
 <section id="collection">
   <div class="container">
-    <p class="eyebrow">The Collection</p>
+    <p class="eyebrow">01 · The Collection</p>
     <h2>Three stones, one origin</h2>
     <p class="prose intro">
       Each stone in this offering was recovered from the Argyle Diamond Mine in Western
@@ -88,6 +88,22 @@ function imageFor(key: string): ImageMetadata {
     width: 100%;
     aspect-ratio: 4 / 5;
     object-fit: cover;
+    transition: transform 1.4s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .card:hover :global(img),
+  .card:focus-visible :global(img) {
+    transform: scale(1.03);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card :global(img) {
+      transition: none;
+    }
+
+    .card:hover :global(img) {
+      transform: none;
+    }
   }
 
   .card-body {

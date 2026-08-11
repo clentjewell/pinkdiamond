@@ -18,7 +18,7 @@ const description =
   <main>
     <ScrollCinema />
     <Collection />
-    {stones.map((stone) => <StoneSection stone={stone} />)}
+    {stones.map((stone, i) => <StoneSection stone={stone} number={i + 2} />)}
     <AboutSale />
     <Enquiry />
   </main>

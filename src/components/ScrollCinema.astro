@@ -1,16 +1,14 @@
 ---
 /**
- * Scroll-driven cinema hero. A pinned full-viewport video is scrubbed by the
- * scroll position: it opens paused on all three stones, then the playhead
- * travels to each stone in turn while that stone's summary card fades in.
+ * Scroll-driven cinema. The film itself lives on a fixed, full-viewport
+ * layer behind the whole page, so it continues behind every later section
+ * with no seam where the intro ends. The pinned track and its stage cards
+ * work exactly as before: scrolling the track scrubs the playhead, cards
+ * fade in over each stone, and after the track the film simply holds its
+ * final frame behind the rest of the page.
  *
- * All motion is continuous and scroll-mapped: camera moves ease in and out,
- * the playhead keeps a barely-perceptible drift while a card is up (so the
- * frame never feels frozen), and card opacity is a smooth function of scroll
- * position — reversing scroll plays every transition backwards identically.
- *
- * Falls back to the static hero image when the video cannot play, when JS is
- * disabled, or when the visitor prefers reduced motion.
+ * Falls back to the static hero image (also fixed) when the video cannot
+ * play, when JS is disabled, or when the visitor prefers reduced motion.
  */
 import { Picture } from 'astro:assets';
 import heroImage from '../assets/hero.jpg';
@@ -18,37 +16,36 @@ import { stones } from '../data/stones';
 ---
 
 <section class="cinema" id="top" aria-label="Introduction">
+  <div class="cinema-backdrop" aria-hidden="true">
+    <div class="cinema-fallback">
+      <Picture
+        src={heroImage}
+        widths={[640, 1024, 1600, 2000]}
+        sizes="100vw"
+        formats={['avif', 'webp']}
+        alt=""
+        loading="eager"
+        fetchpriority="high"
+      />
+    </div>
+    <video
+      class="cinema-video"
+      src="/cinema.mp4"
+      poster="/cinema-poster.jpg"
+      data-landscape-src="/cinema.mp4"
+      data-landscape-poster="/cinema-poster.jpg"
+      data-portrait-src="/cinema-portrait.mp4"
+      data-portrait-poster="/cinema-poster-portrait.jpg"
+      muted
+      playsinline
+      preload="auto"
+      tabindex="-1"
+    ></video>
+    <div class="cinema-scrim"></div>
+  </div>
+
   <div class="cinema-track">
     <div class="cinema-viewport">
-      <video
-        class="cinema-video"
-        src="/cinema.mp4"
-        poster="/cinema-poster.jpg"
-        data-landscape-src="/cinema.mp4"
-        data-landscape-poster="/cinema-poster.jpg"
-        data-portrait-src="/cinema-portrait.mp4"
-        data-portrait-poster="/cinema-poster-portrait.jpg"
-        muted
-        playsinline
-        preload="auto"
-        aria-hidden="true"
-        tabindex="-1"
-      ></video>
-
-      <div class="cinema-fallback">
-        <Picture
-          src={heroImage}
-          widths={[640, 1024, 1600, 2000]}
-          sizes="100vw"
-          formats={['avif', 'webp']}
-          alt="Three Argyle pink diamonds arranged on dark velvet under studio lighting"
-          loading="eager"
-          fetchpriority="high"
-        />
-      </div>
-
-      <div class="cinema-scrim" aria-hidden="true"></div>
-
       <div class="stage stage-intro is-active" data-stage="intro">
         <div class="container">
           <p class="eyebrow">Private Treaty Sale</p>
@@ -111,6 +108,41 @@ import { stones } from '../data/stones';
 </section>
 
 <style>
+  /* The film layer sits fixed behind the entire page. */
+  .cinema-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  .cinema-video,
+  .cinema-fallback,
+  .cinema-fallback :global(picture),
+  .cinema-fallback :global(img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .cinema.no-video .cinema-video {
+    display: none;
+  }
+
+  .cinema-scrim {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at center, transparent 55%, rgb(0 0 0 / 0.3) 100%),
+      linear-gradient(
+        to top,
+        color-mix(in srgb, var(--bg) 35%, transparent),
+        transparent 45%
+      );
+  }
+
   .cinema-track {
     /* Tall track: scrolling through it drives the video playhead. */
     height: 320vh;
@@ -129,29 +161,6 @@ import { stones } from '../data/stones';
     height: 100vh;
     height: 100svh;
     overflow: hidden;
-    isolation: isolate;
-  }
-
-  .cinema-video,
-  .cinema-fallback,
-  .cinema-fallback :global(picture),
-  .cinema-fallback :global(img) {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    z-index: -2;
-  }
-
-  /* The fallback image sits behind the video; if the video renders, it simply
-     covers the image. When scrubbing is unavailable the video is hidden. */
-  .cinema-fallback {
-    z-index: -3;
-  }
-
-  .cinema.no-video .cinema-video {
-    display: none;
   }
 
   .cinema.no-video .cinema-track {
@@ -165,19 +174,6 @@ import { stones } from '../data/stones';
   .cinema.no-video .stage-stone,
   .cinema.no-video .stage-outro {
     display: none;
-  }
-
-  .cinema-scrim {
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    background:
-      linear-gradient(
-        to top,
-        var(--bg) 3%,
-        color-mix(in srgb, var(--bg) 45%, transparent) 40%,
-        color-mix(in srgb, var(--bg) 18%, transparent) 100%
-      );
   }
 
   .stage {

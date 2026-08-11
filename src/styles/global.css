@@ -121,6 +121,18 @@ section {
   padding-block: clamp(4rem, 10vw, 8rem);
 }
 
+/* Content sections float as panels over the fixed film layer; the gaps
+   between them are windows onto the footage. */
+main > section + section {
+  margin-top: 12vh;
+}
+
+@media (max-width: 700px) {
+  main > section + section {
+    margin-top: 7vh;
+  }
+}
+
 .rule {
   border: 0;
   border-top: 1px solid var(--line);

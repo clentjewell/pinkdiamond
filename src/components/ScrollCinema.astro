@@ -24,6 +24,10 @@ import { stones } from '../data/stones';
         class="cinema-video"
         src="/cinema.mp4"
         poster="/cinema-poster.jpg"
+        data-landscape-src="/cinema.mp4"
+        data-landscape-poster="/cinema-poster.jpg"
+        data-portrait-src="/cinema-portrait.mp4"
+        data-portrait-poster="/cinema-poster-portrait.jpg"
         muted
         playsinline
         preload="auto"
@@ -110,6 +114,13 @@ import { stones } from '../data/stones';
   .cinema-track {
     /* Tall track: scrolling through it drives the video playhead. */
     height: 600vh;
+  }
+
+  /* Phones scroll by thumb — keep the sequence shorter so it doesn't drag. */
+  @media (max-width: 700px) {
+    .cinema-track {
+      height: 420vh;
+    }
   }
 
   .cinema-viewport {
@@ -246,6 +257,25 @@ import { stones } from '../data/stones';
     border-radius: 3px;
     padding: 1.75rem 2rem 2rem;
     box-shadow: 0 30px 60px -30px rgb(0 0 0 / 0.55);
+  }
+
+  /* Cheaper compositing on phone GPUs: lighter blur, more opaque panel. */
+  @media (max-width: 700px) {
+    .stone-card {
+      max-width: none;
+      background: color-mix(in srgb, var(--bg) 82%, transparent);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      padding: 1.4rem 1.5rem 1.6rem;
+    }
+
+    .stone-card-title {
+      font-size: 1.4rem;
+    }
+
+    .stage {
+      padding-bottom: clamp(2.25rem, 7vh, 4rem);
+    }
   }
 
   .stage-count {
@@ -415,6 +445,24 @@ import { stones } from '../data/stones';
     let duration = 0;
     let progress = 0;
     let shownTime = -1;
+    let orientation: 'portrait' | 'landscape' | null = null;
+
+    // Portrait phones get a 9:16 recomposition of the film so all three
+    // stones stay in frame; landscape screens keep the 16:9 original.
+    function applyOrientation() {
+      const next = window.innerHeight > window.innerWidth ? 'portrait' : 'landscape';
+      if (next === orientation) return;
+      orientation = next;
+      const src = video!.dataset[`${next}Src`];
+      const poster = video!.dataset[`${next}Poster`];
+      if (src && video!.getAttribute('src') !== src) {
+        duration = 0;
+        shownTime = -1;
+        if (poster) video!.setAttribute('poster', poster);
+        video!.setAttribute('src', src);
+        video!.load();
+      }
+    }
 
     function readScroll() {
       const rect = track!.getBoundingClientRect();
@@ -460,8 +508,16 @@ import { stones } from '../data/stones';
     }
 
     window.addEventListener('scroll', readScroll, { passive: true });
-    window.addEventListener('resize', readScroll, { passive: true });
+    window.addEventListener(
+      'resize',
+      () => {
+        applyOrientation();
+        readScroll();
+      },
+      { passive: true }
+    );
 
+    applyOrientation();
     readScroll();
     requestAnimationFrame(render);
   }

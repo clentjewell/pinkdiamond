@@ -1,7 +1,8 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteNav from '../components/SiteNav.astro';
-import ScrollCinema from '../components/ScrollCinema.astro';
+import CinemaBackdrop from '../components/CinemaBackdrop.astro';
+import HeroStage from '../components/HeroStage.astro';
 import Collection from '../components/Collection.astro';
 import StoneSection from '../components/StoneSection.astro';
 import AboutSale from '../components/AboutSale.astro';
@@ -14,9 +15,10 @@ const description =
 ---
 
 <BaseLayout title={title} description={description} ogImage="/og-image.jpg">
+  <CinemaBackdrop />
   <SiteNav />
   <main>
-    <ScrollCinema />
+    <HeroStage />
     <Collection />
     {stones.map((stone) => <StoneSection stone={stone} />)}
     <AboutSale />
@@ -38,6 +40,7 @@ const description =
     padding-block: 2.5rem;
     font-size: 0.8rem;
     color: var(--text-muted);
+    background: color-mix(in srgb, var(--bg) 92%, transparent);
   }
 </style>
 

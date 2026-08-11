@@ -36,6 +36,8 @@ html {
   }
 }
 
+/* The fixed cinema backdrop covers the body background; sections paint
+   translucent panels over it. */
 body {
   background: var(--bg);
   color: var(--text);
@@ -119,6 +121,18 @@ textarea:focus-visible {
 
 section {
   padding-block: clamp(4rem, 10vw, 8rem);
+}
+
+/* Content sections float as panels over the fixed film backdrop; the gaps
+   between them are windows onto the footage. */
+main > section + section {
+  margin-top: 12vh;
+}
+
+@media (max-width: 700px) {
+  main > section + section {
+    margin-top: 7vh;
+  }
 }
 
 .rule {
